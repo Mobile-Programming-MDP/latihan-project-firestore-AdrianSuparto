@@ -72,10 +72,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
       ),
     );
   }
-}
 
-Future<void> _gotoLocation() async {
-  final GoogleMapController controller = await controller.future;
-  await controller
-      .animateCamera(cameraUpdate.newCameraPosition(_cameraPosition));
+  Future<void> _gotoLocation() async {
+    final GoogleMapController controller = await _controller.future;
+    await controller
+        .animateCamera(CameraUpdate.newCameraPosition(_cameraPosition));
+  }
 }
