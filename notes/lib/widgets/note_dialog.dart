@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,10 +21,10 @@ class _NoteDialogState extends State<NoteDialog> {
   final TextEditingController _descriptionController = TextEditingController();
   XFile? _imageFile;
   Position? _position;
+  final picker = ImagePicker();
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     if (widget.note != null) {
       _titleController.text = widget.note!.title;
@@ -37,14 +39,48 @@ class _NoteDialogState extends State<NoteDialog> {
     });
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
         _imageFile = pickedFile;
       });
     }
+  }
+
+  void _showPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text(
+                'Image Source',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -78,7 +114,7 @@ class _NoteDialogState extends State<NoteDialog> {
           ),
           Expanded(
             child: _imageFile != null
-                ? Image.network(_imageFile!.path, fit: BoxFit.cover)
+                ? Image.file(File(_imageFile!.path), fit: BoxFit.cover)
                 : (widget.note?.imageUrl != null &&
                         Uri.parse(widget.note!.imageUrl!).isAbsolute
                     ? Image.network(
@@ -88,8 +124,8 @@ class _NoteDialogState extends State<NoteDialog> {
                     : Container()),
           ),
           TextButton(
-            onPressed: _pickImage,
-            child: const Text('Pick Image'),
+            onPressed: _showPicker,
+            child: const Text('Select Image'),
           ),
           TextButton(
             onPressed: _getLocation,

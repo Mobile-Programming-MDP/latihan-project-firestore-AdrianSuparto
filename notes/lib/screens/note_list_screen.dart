@@ -3,7 +3,10 @@ import 'package:notes/models/note.dart';
 import 'package:notes/screens/google_map_screen.dart';
 import 'package:notes/services/note_service.dart';
 import 'package:notes/widgets/note_dialog.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
+import 'package:notes/theme/theme_controller.dart';
 
 class NoteListScreen extends StatefulWidget {
   const NoteListScreen({super.key});
@@ -18,6 +21,22 @@ class _NoteListScreenState extends State<NoteListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notes'),
+        actions: [
+          Consumer<ThemeController>(
+            builder: (context, themeController, child) {
+              return IconButton(
+                onPressed: () {
+                  themeController.changeThemeMode(
+                    themeController.iconBool ? ThemeMode.light : ThemeMode.dark,
+                  );
+                },
+                icon: Icon(
+                  themeController.iconBool ? Icons.nights_stay : Icons.wb_sunny,
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: const NoteList(),
       floatingActionButton: FloatingActionButton(
@@ -55,7 +74,7 @@ class NoteList extends StatelessWidget {
           default:
             return ListView(
               padding: const EdgeInsets.only(bottom: 80),
-              children: snapshot.data!.map((document) {
+              children: snapshot.data!.map<Widget>((document) {
                 return Card(
                   child: Column(
                     children: [
@@ -90,12 +109,20 @@ class NoteList extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
+                              onTap: () {
+                                Share.share(
+                                  'Check out this note: \n\nTitle: ${document.title}\n\nDescription: ${document.description}${document.imageUrl != null ? "\n\nImage: ${document.imageUrl}" : ""}',
+                                  subject: 'Note: ${document.title}',
+                                );
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Icon(Icons.share),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            InkWell(
                               onTap: () async {
-                                //open url launcher
-                                // String url =
-                                //     "https://www.google.com/maps/search/?api=1&query=${document.lat},${document.lng}";
-                                // Uri uri = Uri.parse(url);
-                                // _launchUrl(uri);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -111,9 +138,7 @@ class NoteList extends StatelessWidget {
                                 child: Icon(Icons.map),
                               ),
                             ),
-                            const SizedBox(
-                              width: 10,
-                            ),
+                            const SizedBox(width: 10),
                             InkWell(
                               onTap: () {
                                 showAlertDialog(context, document);
@@ -142,8 +167,7 @@ class NoteList extends StatelessWidget {
     }
   }
 
-  showAlertDialog(BuildContext context, Note document) {
-    // set up the buttons
+  void showAlertDialog(BuildContext context, Note document) {
     Widget cancelButton = ElevatedButton(
       child: const Text("No"),
       onPressed: () {
@@ -159,7 +183,6 @@ class NoteList extends StatelessWidget {
       },
     );
 
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: const Text("Delete Note"),
       content: const Text("Are you sure to delete Note?"),
@@ -169,7 +192,6 @@ class NoteList extends StatelessWidget {
       ],
     );
 
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
